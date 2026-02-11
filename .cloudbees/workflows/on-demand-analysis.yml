@@ -27,7 +27,7 @@ jobs:
         uses: swashbuck1r/claude-ci-tools@main
         with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}  # Must be a GitHub PAT with repo scope
           pr-number: ${{ inputs.pr-number }}
           repository: ${{ inputs.repository }}
           post-comment: ${{ inputs.post-comment }}

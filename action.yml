@@ -70,20 +70,36 @@ runs:
 
         # Run the analysis
         echo "Analyzing PR #${{ inputs.pr-number }} in ${{ inputs.repository }}..."
-        python -m claude_ci_tools.analyze_pr | tee analysis_output.txt
+        python -m claude_ci_tools.analyze_pr | tee analysis_output.md
 
         # Extract summary and score from output
-        SUMMARY=$(grep -A 5 "## Summary" analysis_output.txt | tail -n +2 | head -n 1 || echo "Analysis completed")
-        SCORE=$(grep "Overall Quality Score:" analysis_output.txt | grep -oE '[0-9]+' | head -n 1 || echo "0")
+        SUMMARY=$(grep -A 5 "## Summary" analysis_output.md | tail -n +2 | head -n 1 || echo "Analysis completed")
+        SCORE=$(grep "Overall Quality Score:" analysis_output.md | grep -oE '[0-9]+' | head -n 1 || echo "0")
 
         # Write outputs
         echo "$SUMMARY" > $CLOUDBEES_OUTPUTS/summary
         echo "$SCORE" > $CLOUDBEES_OUTPUTS/score
 
-        # Write full analysis to a file for CloudBees to display
-        echo "Full analysis written to analysis_output.txt"
+        # Write full analysis to markdown file
+        echo "Full analysis written to analysis_output.md"
 
         echo "✅ Analysis complete! Quality Score: $SCORE/10"
+
+    - name: Read Analysis Output
+      id: read-output
+      uses: docker://alpine:3.20
+      shell: sh
+      working-directory: claude-ci-tools
+      run: |
+        # Read the analysis markdown and write to CloudBees output
+        cat analysis_output.md > $CLOUDBEES_OUTPUTS/analysis_content
+
+    - name: Publish Evidence
+      id: evidence
+      uses: https://github.com/cloudbees-io/publish-evidence-item@v1
+      with:
+        content: ${{ steps.read-output.outputs.analysis_content }}
+        format: markdown
 
     - name: Display Results
       id: display
@@ -94,5 +110,5 @@ runs:
         echo "==================================="
         echo "Claude PR Analysis Results"
         echo "==================================="
-        cat analysis_output.txt
+        cat analysis_output.md
         echo "==================================="

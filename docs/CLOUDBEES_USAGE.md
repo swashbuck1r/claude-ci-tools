@@ -9,6 +9,9 @@ This guide explains how to use the Claude PR Analysis action in CloudBees workfl
 In your CloudBees organization, add these secrets:
 - `ANTHROPIC_API_KEY`: Your Anthropic API key from https://console.anthropic.com/
 - `GITHUB_TOKEN`: GitHub Personal Access Token with `repo` scope
+  - Create at: https://github.com/settings/tokens
+  - Required scopes: `repo` (for private repos) or `public_repo` (for public repos only)
+  - **Important:** CloudBees does NOT automatically provide a GITHUB_TOKEN like GitHub Actions - you must create and configure this manually
 
 ### 2. Create a Workflow
 
