@@ -57,9 +57,10 @@ runs:
       run: |
         set -e
 
-        # Install dependencies
+        # Install dependencies and the package
         echo "Installing dependencies..."
         pip install --quiet -r requirements.txt
+        pip install --quiet -e .
 
         # Extract owner and repo from repository input
         REPO_OWNER=$(echo "${{ inputs.repository }}" | cut -d'/' -f1)
