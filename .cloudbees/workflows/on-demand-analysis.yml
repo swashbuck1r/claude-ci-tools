@@ -23,6 +23,7 @@ jobs:
   analyze:
     steps:
       - name: Run Claude PR Analysis
+        id: analyze
         uses: swashbuck1r/claude-ci-tools@main
         with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}

@@ -13,6 +13,7 @@ jobs:
   analyze-pr:
     steps:
       - name: Analyze PR
+        id: analysis
         uses: swashbuck1r/claude-ci-tools@main
         with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -24,8 +25,8 @@ jobs:
       - name: Check Quality Score
         uses: docker://alpine:3.20
         shell: sh
-        if: ${{ steps.analyze-pr.outputs.quality-score < 7 }}
+        if: ${{ steps.analysis.outputs.quality-score < 7 }}
         run: |
-          echo "⚠️ Quality score is below threshold: ${{ steps.analyze-pr.outputs.quality-score }}/10"
+          echo "⚠️ Quality score is below threshold: ${{ steps.analysis.outputs.quality-score }}/10"
           echo "Please review the analysis and address the issues"
           exit 1
