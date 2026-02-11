@@ -55,6 +55,7 @@ The workflow will automatically run when:
 | `pr-number` | Yes | Pull request number to analyze | - |
 | `repository` | Yes | Repository in format `owner/repo` | - |
 | `post-comment` | No | Post analysis as PR comment | `false` |
+| `tools-repository` | No | Repository containing claude-ci-tools | `swashbuck1r/claude-ci-tools` |
 
 ## Action Outputs
 

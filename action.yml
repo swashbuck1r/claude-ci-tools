@@ -20,6 +20,10 @@ inputs:
     description: "Post analysis as PR comment (true/false)"
     required: false
     default: "false"
+  tools-repository:
+    description: "Repository containing claude-ci-tools (owner/repo)"
+    required: false
+    default: "swashbuck1r/claude-ci-tools"
 
 outputs:
   analysis-summary:
@@ -32,21 +36,18 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Clone claude-ci-tools
-      id: clone
-      uses: docker://alpine/git:latest
-      shell: sh
-      run: |
-        cd ${{ cloudbees.workspace }}
-        git clone https://github.com/${{ github.repository_owner }}/claude-ci-tools.git
-        cd claude-ci-tools
-        echo "Claude CI Tools cloned successfully"
+    - name: Checkout claude-ci-tools
+      id: checkout
+      uses: cloudbees-io/checkout@v1
+      with:
+        repository: ${{ inputs.tools-repository }}
+        path: claude-ci-tools
 
     - name: Analyze PR with Claude
       id: analyze
       uses: docker://python:3.11-slim
       shell: bash
-      working-directory: ${{ cloudbees.workspace }}/claude-ci-tools
+      working-directory: claude-ci-tools
       env:
         ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
         GITHUB_TOKEN: ${{ inputs.github-token }}
@@ -87,7 +88,7 @@ runs:
       id: display
       uses: docker://alpine:3.20
       shell: sh
-      working-directory: ${{ cloudbees.workspace }}/claude-ci-tools
+      working-directory: claude-ci-tools
       run: |
         echo "==================================="
         echo "Claude PR Analysis Results"
