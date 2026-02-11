@@ -1,0 +1,96 @@
+apiVersion: automation.cloudbees.io/v1alpha1
+kind: action
+name: claude-pr-analysis
+description: "Analyze pull requests using Claude AI for code quality, security, and best practices"
+
+inputs:
+  anthropic-api-key:
+    description: "Anthropic API key for Claude access"
+    required: true
+  github-token:
+    description: "GitHub token for API access"
+    required: true
+  pr-number:
+    description: "Pull request number to analyze"
+    required: true
+  repository:
+    description: "Repository in format 'owner/repo'"
+    required: true
+  post-comment:
+    description: "Post analysis as PR comment (true/false)"
+    required: false
+    default: "false"
+
+outputs:
+  analysis-summary:
+    description: "Summary of the PR analysis"
+    value: ${{ steps.analyze.outputs.summary }}
+  quality-score:
+    description: "Overall quality score (1-10)"
+    value: ${{ steps.analyze.outputs.score }}
+
+runs:
+  using: composite
+  steps:
+    - name: Clone claude-ci-tools
+      id: clone
+      uses: docker://alpine/git:latest
+      shell: sh
+      run: |
+        cd ${{ cloudbees.workspace }}
+        git clone https://github.com/${{ github.repository_owner }}/claude-ci-tools.git
+        cd claude-ci-tools
+        echo "Claude CI Tools cloned successfully"
+
+    - name: Analyze PR with Claude
+      id: analyze
+      uses: docker://python:3.11-slim
+      shell: bash
+      working-directory: ${{ cloudbees.workspace }}/claude-ci-tools
+      env:
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        PR_NUMBER: ${{ inputs.pr-number }}
+        GITHUB_REPOSITORY: ${{ inputs.repository }}
+        POST_COMMENT: ${{ inputs.post-comment }}
+      run: |
+        set -e
+
+        # Install dependencies
+        echo "Installing dependencies..."
+        pip install --quiet -r requirements.txt
+
+        # Extract owner and repo from repository input
+        REPO_OWNER=$(echo "${{ inputs.repository }}" | cut -d'/' -f1)
+        REPO_NAME=$(echo "${{ inputs.repository }}" | cut -d'/' -f2)
+
+        export GITHUB_REPOSITORY_OWNER="$REPO_OWNER"
+
+        # Run the analysis
+        echo "Analyzing PR #${{ inputs.pr-number }} in ${{ inputs.repository }}..."
+        python -m claude_ci_tools.analyze_pr | tee analysis_output.txt
+
+        # Extract summary and score from output
+        SUMMARY=$(grep -A 5 "## Summary" analysis_output.txt | tail -n +2 | head -n 1 || echo "Analysis completed")
+        SCORE=$(grep "Overall Quality Score:" analysis_output.txt | grep -oE '[0-9]+' | head -n 1 || echo "0")
+
+        # Write outputs
+        echo "$SUMMARY" > $CLOUDBEES_OUTPUTS/summary
+        echo "$SCORE" > $CLOUDBEES_OUTPUTS/score
+
+        # Write full analysis to a file for CloudBees to display
+        echo "Full analysis written to analysis_output.txt"
+
+        echo "✅ Analysis complete! Quality Score: $SCORE/10"
+
+    - name: Display Results
+      id: display
+      uses: docker://alpine:3.20
+      shell: sh
+      working-directory: ${{ cloudbees.workspace }}/claude-ci-tools
+      run: |
+        echo "==================================="
+        echo "Claude PR Analysis Results"
+        echo "==================================="
+        cat analysis_output.txt
+        echo "==================================="

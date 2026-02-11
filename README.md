@@ -64,7 +64,37 @@ If you have AWS Bedrock access and want to use it instead of the Anthropic API (
 - Anthropic API key (or AWS Bedrock access)
 - GitHub Personal Access Token
 
-## GitHub Actions Integration
+## CI/CD Integration
+
+### CloudBees Workflows
+
+Add to your repository's `.cloudbees/workflows/pr-analysis.yml`:
+
+```yaml
+apiVersion: automation.cloudbees.io/v1alpha1
+kind: workflow
+name: PR Analysis
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  analyze:
+    steps:
+      - name: Analyze PR
+        uses: <your-org>/claude-ci-tools@main
+        with:
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pr-number: ${{ cloudbees.scm.pull_request.number }}
+          repository: ${{ cloudbees.scm.repository_full_name }}
+          post-comment: "true"
+```
+
+See [CloudBees Usage Guide](docs/CLOUDBEES_USAGE.md) for detailed examples.
+
+### GitHub Actions
 
 Add to your repository's `.github/workflows/pr-analysis.yml`:
 
@@ -88,7 +118,7 @@ jobs:
 
 **Required Secrets:**
 - `ANTHROPIC_API_KEY`: Get from https://console.anthropic.com/
-- `GITHUB_TOKEN`: Automatically provided by GitHub
+- `GITHUB_TOKEN`: Automatically provided
 
 ## Environment Variables Reference
 

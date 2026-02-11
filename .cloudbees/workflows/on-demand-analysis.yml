@@ -1,0 +1,39 @@
+apiVersion: automation.cloudbees.io/v1alpha1
+kind: workflow
+name: On-Demand PR Analysis
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr-number:
+        description: "PR number to analyze"
+        required: true
+        type: number
+      repository:
+        description: "Repository (owner/repo)"
+        required: true
+        type: string
+      post-comment:
+        description: "Post results as PR comment"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  analyze:
+    steps:
+      - name: Run Claude PR Analysis
+        uses: .
+        with:
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pr-number: ${{ inputs.pr-number }}
+          repository: ${{ inputs.repository }}
+          post-comment: ${{ inputs.post-comment }}
+
+      - name: Show Results
+        uses: docker://alpine:3.20
+        shell: sh
+        run: |
+          echo "📊 Analysis Summary: ${{ steps.analyze.outputs.analysis-summary }}"
+          echo "⭐ Quality Score: ${{ steps.analyze.outputs.quality-score }}/10"
