@@ -1,0 +1,56 @@
+name: Analyze PR with Claude
+
+on:
+  workflow_call:
+    inputs:
+      pr_number:
+        description: 'Pull request number to analyze'
+        required: true
+        type: number
+      post_comment:
+        description: 'Post analysis as PR comment'
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      ANTHROPIC_API_KEY:
+        required: true
+      GITHUB_TOKEN:
+        required: true
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Checkout claude-ci-tools
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/claude-ci-tools
+          path: .claude-ci-tools
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        working-directory: .claude-ci-tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Analyze PR
+        working-directory: .claude-ci-tools
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+          POST_COMMENT: ${{ inputs.post_comment }}
+          GITHUB_STEP_SUMMARY: ${{ github.step_summary }}
+        run: python -m claude_ci_tools.analyze_pr

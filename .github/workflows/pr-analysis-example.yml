@@ -1,0 +1,16 @@
+name: Example PR Analysis Usage
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  analyze-pr:
+    name: Analyze PR Changes
+    uses: ./.github/workflows/analyze-pr.yml
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+      post_comment: true
+    secrets:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
