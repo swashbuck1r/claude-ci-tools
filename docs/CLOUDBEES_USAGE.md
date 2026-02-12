@@ -37,8 +37,8 @@ jobs:
         with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          pr-number: ${{ cloudbees.scm.pull_request.number }}
-          repository: ${{ cloudbees.scm.repository_full_name }}
+          pr-number: ${{ cloudbees.event.pull_request.number }}
+          repository: ${{ cloudbees.scm.repository }}
           post-comment: "true"
 ```
 
@@ -80,8 +80,8 @@ jobs:
         with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          pr-number: ${{ cloudbees.scm.pull_request.number }}
-          repository: ${{ cloudbees.scm.repository_full_name }}
+          pr-number: ${{ cloudbees.event.pull_request.number }}
+          repository: ${{ cloudbees.scm.repository }}
 ```
 
 ### Example 2: Quality Gate (Fail if Score < 7)
@@ -96,8 +96,8 @@ jobs:
         with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          pr-number: ${{ cloudbees.scm.pull_request.number }}
-          repository: ${{ cloudbees.scm.repository_full_name }}
+          pr-number: ${{ cloudbees.event.pull_request.number }}
+          repository: ${{ cloudbees.scm.repository }}
 
       - name: Check Quality Gate
         uses: docker://alpine:3.20
@@ -119,8 +119,8 @@ jobs:
         with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          pr-number: ${{ cloudbees.scm.pull_request.number }}
-          repository: ${{ cloudbees.scm.repository_full_name }}
+          pr-number: ${{ cloudbees.event.pull_request.number }}
+          repository: ${{ cloudbees.scm.repository }}
           post-comment: "true"
 ```
 
@@ -148,7 +148,7 @@ jobs:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           pr-number: ${{ inputs.pr-number }}
-          repository: ${{ cloudbees.scm.repository_full_name }}
+          repository: ${{ cloudbees.scm.repository }}
           post-comment: "true"
 ```
 
@@ -164,16 +164,16 @@ jobs:
         with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          pr-number: ${{ cloudbees.scm.pull_request.number }}
-          repository: ${{ cloudbees.scm.repository_full_name }}
+          pr-number: ${{ cloudbees.event.pull_request.number }}
+          repository: ${{ cloudbees.scm.repository }}
 
       - name: Send Slack Notification
         uses: cloudbees-io/slack-notify@v1
         with:
           message: |
             PR Analysis Complete!
-            Repository: ${{ cloudbees.scm.repository_full_name }}
-            PR: #${{ cloudbees.scm.pull_request.number }}
+            Repository: ${{ cloudbees.scm.repository }}
+            PR: #${{ cloudbees.event.pull_request.number }}
             Quality Score: ${{ steps.analysis.outputs.quality-score }}/10
             Summary: ${{ steps.analysis.outputs.analysis-summary }}
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -183,10 +183,11 @@ jobs:
 
 These CloudBees-specific variables are available in workflows:
 
-- `${{ cloudbees.scm.pull_request.number }}` - Current PR number
-- `${{ cloudbees.scm.repository_full_name }}` - Full repository name (owner/repo)
+- `${{ cloudbees.event.pull_request.number }}` - Current PR number
+- `${{ cloudbees.scm.repository }}` - Repository name (owner/repo)
 - `${{ cloudbees.scm.branch }}` - Current branch name
 - `${{ cloudbees.scm.sha }}` - Current commit SHA
+- `${{ cloudbees.scm.ref }}` - Current reference (branch/tag)
 - `${{ cloudbees.run_id }}` - Workflow run ID
 - `${{ cloudbees.workspace }}` - Workflow workspace directory
 
@@ -232,8 +233,8 @@ If you want to use AWS Bedrock in CloudBees, modify the action to set:
     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
-    pr-number: ${{ cloudbees.scm.pull_request.number }}
-    repository: ${{ cloudbees.scm.repository_full_name }}
+    pr-number: ${{ cloudbees.event.pull_request.number }}
+    repository: ${{ cloudbees.scm.repository }}
 ```
 
 Note: You'll need to modify the action's `analyze` step to pass these env vars.

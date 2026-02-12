@@ -18,8 +18,8 @@ jobs:
         with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          pr-number: ${{ cloudbees.scm.pull_request.number }}
-          repository: ${{ cloudbees.scm.repository_full_name }}
+          pr-number: ${{ cloudbees.event.pull_request.number }}
+          repository: ${{ cloudbees.scm.repository }}
           post-comment: "true"
 
       - name: Check Quality Score
